@@ -16,5 +16,5 @@ app.use('/api/questions', questionRoutes);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`✅ Backend running at http://localhost:${PORT}`);
+  console.log(`✅ Backend running at https://solocoach-backend.onrender.com:${PORT}`);
 });

@@ -10,7 +10,7 @@ export const fallbackQuestions = [
 
 export async function getWeeklyQuestions(): Promise<string[]> {
   try {
-    const res = await fetch('http://localhost:5000/api/questions', {
+    const res = await fetch('https://solocoach-backend.onrender.com/api/questions', {
       method: 'POST'
     })
 
