@@ -3,12 +3,13 @@
 import { useState, useEffect } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import { Dialog, DialogContent, DialogTrigger, DialogTitle} from '@/components/ui/dialog'
 import { db, ReflectionEntry } from '@/lib/db'
+import { getWeeklyQuestions } from '@/lib/questions'
 import Link from 'next/link'
 
 function Countdown() {
-  const [timeLeft, setTimeLeft] = useState("")
+  const [timeLeft, setTimeLeft] = useState('')
 
   useEffect(() => {
     const update = () => {
@@ -37,19 +38,46 @@ function Countdown() {
 }
 
 export default function Home() {
+  const [question, setQuestion] = useState<string | null>(null)
   const [response, setResponse] = useState('')
   const [quote, setQuote] = useState('')
   const [loading, setLoading] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const today = new Date().toISOString().split('T')[0]
-  const question = "🧘 What's something you handled better today than yesterday?"
-
   useEffect(() => {
-    const checkToday = async () => {
+    const init = async () => {
+      const todayDate = new Date()
+      const todayStr = todayDate.toISOString().split('T')[0]
+      const dayIndex = todayDate.getDay() // 0 = Sunday
+
+      const weekStart = new Date(todayDate)
+      weekStart.setDate(todayDate.getDate() - dayIndex)
+      const weekStartStr = weekStart.toISOString().split('T')[0]
+
+      // Get or create this week's questions
+      let week = await db.weeklyQuestions.where('weekStart').equals(weekStartStr).first()
+      if (!week) {
+        const questions = await getWeeklyQuestions()
+        try {
+          const id = await db.weeklyQuestions.add({
+            weekStart: weekStartStr,
+            questions,
+          })
+          week = { id, weekStart: weekStartStr, questions }
+        } catch (error) {
+          console.warn("Weekly questions already saved, skipping duplicate.", error)
+          week = await db.weeklyQuestions.where('weekStart').equals(weekStartStr).first()
+        }
+      }
+
+      if (week && week.questions) {
+        setQuestion(week.questions[dayIndex])
+      }
+
+      // Check if today's reflection exists
       const existing: ReflectionEntry | undefined = await db.reflections
         .where('date')
-        .equals(today)
+        .equals(todayStr)
         .first()
 
       if (existing) {
@@ -59,8 +87,8 @@ export default function Home() {
       }
     }
 
-    checkToday()
-  }, [today])
+    init()
+  }, [])
 
   const handleSubmit = async () => {
     setLoading(true)
@@ -77,7 +105,7 @@ export default function Home() {
       setQuote(generatedQuote)
 
       await db.reflections.add({
-        date: today,
+        date: new Date().toISOString().split('T')[0],
         response,
         quote: generatedQuote,
       })
@@ -96,7 +124,9 @@ export default function Home() {
     <main className="min-h-screen bg-slate-950 text-white flex items-center justify-center px-4 py-10">
       <div className="w-full max-w-xl space-y-6 rounded-2xl bg-slate-900/60 border border-slate-800 p-6 shadow-xl backdrop-blur">
         <div className="flex flex-col items-center text-center space-y-2">
-          <h1 className="text-2xl md:text-3xl font-semibold">{question}</h1>
+          <h1 className="text-2xl md:text-3xl font-semibold">
+            {question ? `🧘 ${question}` : 'Loading...'}
+          </h1>
           {submitted && <Countdown />}
         </div>
 
@@ -121,8 +151,8 @@ export default function Home() {
 
           {submitted && (
             <DialogContent className="text-white bg-slate-900 border border-slate-700">
-              <p className="text-lg font-semibold mb-2">✨ AI Quote:</p>
-              <blockquote className="italic text-slate-300">&quot;{quote}&quot;</blockquote>
+              <DialogTitle className="text-lg font-semibold mb-2">✨ AI Quote:</DialogTitle>
+              <blockquote className="italic text-slate-300">{quote}</blockquote>
             </DialogContent>
           )}
         </Dialog>

@@ -6,9 +6,6 @@ dotenv.config()
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY
 
 router.post('/', async (req, res) => {
-  const { reflection } = req.body
-  if (!reflection) return res.status(400).json({ error: 'Reflection is required' })
-
   try {
     const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -21,22 +18,30 @@ router.post('/', async (req, res) => {
         messages: [
           {
             role: 'user',
-            content: `Generate a motivational quote based on this reflection:\n"${reflection}"`,
+            content: `Give me 7 unique daily reflection questions (1 per day) that encourage self-awareness and personal growth. Respond as a numbered list, no extra commentary.`,
           },
         ],
         temperature: 0.7,
-        max_tokens: 60,
+        max_tokens: 300,
       }),
     })
 
     const data = await response.json()
-    const quote = data.choices?.[0]?.message?.content?.trim()
 
-    if (!quote) throw new Error('No quote returned')
-    return res.json({ quote })
+    if (!data.choices?.[0]?.message?.content) {
+      throw new Error("Invalid response from OpenRouter")
+    }
+
+    const raw = data.choices[0].message.content
+    const questions = raw
+      .split('\n')
+      .map((line) => line.replace(/^\d+\.\s*/, '').trim())
+      .filter((q) => q.length > 10)
+
+    return res.json({ questions })
   } catch (err) {
-    console.error('OpenRouter error:', err)
-    return res.status(500).json({ error: 'Quote generation failed' })
+    console.error('Failed to fetch questions from OpenRouter:', err)
+    return res.status(500).json({ error: 'fallback' })
   }
 })
 

@@ -7,13 +7,21 @@ export interface ReflectionEntry {
     quote: string
 }
 
+export interface WeeklyQuestions {
+    id?: number
+    weekStart: string // ISO date string
+    questions: string[]
+}
+
 class SoloCoach extends Dexie {
     reflections!: Table<ReflectionEntry, number>;
+    weeklyQuestions!: Table<WeeklyQuestions, number>;
 
     constructor() {
         super("SoloCoach");
-        this.version(1).stores({
-            reflections: "++id, date"
+        this.version(2).stores({
+            reflections: "++id, date",
+            weeklyQuestions: "++id, &weekStart"
         })
     }
 }
