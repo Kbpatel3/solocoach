@@ -54,6 +54,17 @@ export default function ResponsesPage() {
             ))}
           </div>
         )}
+
+        <div className="pt-1 text-center">
+          <a
+            href="https://forms.gle/pyifZJPeAas2atoF6"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-slate-500 hover:text-white transition-colors underline"
+          >
+            Submit feedback or suggest a feature →
+          </a>
+        </div>
       </div>
     </main>
   )
