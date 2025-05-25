@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { db, ReflectionEntry } from '@/lib/db'
+import Link from 'next/link'
+import { ArrowLeft } from 'lucide-react'
 
 export default function ResponsesPage() {
   const [entries, setEntries] = useState<ReflectionEntry[]>([])
@@ -16,23 +18,41 @@ export default function ResponsesPage() {
   }, [])
 
   return (
-    <main className="min-h-screen bg-slate-950 text-white p-6">
+    <main className="min-h-screen bg-slate-950 text-white px-4 py-10">
       <div className="max-w-3xl mx-auto space-y-6">
-        <h1 className="text-3xl font-bold text-center mb-6">📜 Your Reflections</h1>
+        <div className="flex justify-between items-center mb-6">
+          <div className="space-y-4 mb-6">
+            <Link
+                href="/"
+                className="inline-flex items-center text-slate-400 hover:text-white text-sm gap-1"
+            >
+                <ArrowLeft className="w-4 h-4" />
+                Back to Today
+            </Link>
+
+            <h1 className="text-2xl font-semibold text-center">
+                📜 Your Reflections
+            </h1>
+          </div>
+        </div>
 
         {entries.length === 0 ? (
           <p className="text-center text-slate-400">No reflections yet.</p>
         ) : (
-          entries.map((entry) => (
-            <div
-              key={entry.id}
-              className="bg-slate-900 border border-slate-700 rounded-lg p-4 space-y-2"
-            >
-              <p className="text-sm text-slate-400">🗓 {entry.date}</p>
-              <p className="text-base text-white">📝 {entry.response}</p>
-              <blockquote className="italic text-slate-300">✨ &quot;{entry.quote}&quot;</blockquote>
-            </div>
-          ))
+          <div className="space-y-4">
+            {entries.map((entry) => (
+              <div
+                key={entry.id}
+                className="bg-slate-900/60 border border-slate-800 rounded-xl p-5 backdrop-blur shadow-lg space-y-3"
+              >
+                <p className="text-sm text-slate-400">🗓 {entry.date}</p>
+                <div className="text-white whitespace-pre-line">📝 {entry.response}</div>
+                <blockquote className="text-sm italic text-slate-300 border-l-4 border-slate-700 pl-4">
+                  ✨ “{entry.quote}”
+                </blockquote>
+              </div>
+            ))}
+          </div>
         )}
       </div>
     </main>
